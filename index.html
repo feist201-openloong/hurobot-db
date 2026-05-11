@@ -59,11 +59,23 @@ tr:hover { background: #f8f9ff; }
 .clickable { cursor: pointer; color: #1c7ed6; }
 .clickable:hover { text-decoration: underline; }
 .footer { text-align: center; padding: 24px; color: #999; font-size: 0.78rem; }
-.news-section { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
-.news-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.news-header h2 { font-size: 1.1rem; font-weight: 700; }
-.news-header h2 .icon { color: #ff6b6b; margin-right: 6px; }
-.news-header .update-time { font-size: 0.75rem; color: #999; }
+.news-section { background: white; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+.news-banner { background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); padding: 20px 24px; position: relative; overflow: hidden; }
+.news-banner::before { content: ''; position: absolute; top: -50%; right: -10%; width: 300px; height: 300px; background: radial-gradient(circle, rgba(255,107,107,0.15) 0%, transparent 70%); border-radius: 50%; }
+.news-banner::after { content: ''; position: absolute; bottom: -30%; left: 5%; width: 200px; height: 200px; background: radial-gradient(circle, rgba(76,201,240,0.12) 0%, transparent 70%); border-radius: 50%; }
+.news-banner .banner-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
+.news-banner .banner-left h2 { font-size: 1.5rem; font-weight: 800; color: white; margin: 0; }
+.news-banner .banner-left h2 .icon { font-size: 1.6rem; margin-right: 8px; }
+.news-banner .banner-left .banner-subtitle { color: rgba(255,255,255,0.6); font-size: 0.82rem; margin-top: 4px; }
+.news-banner .banner-right { text-align: right; }
+.news-banner .banner-right .date-badge { display: inline-block; background: rgba(255,255,255,0.12); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; backdrop-filter: blur(4px); }
+.news-banner .banner-right .date-badge .dot { display: inline-block; width: 7px; height: 7px; background: #51cf66; border-radius: 50%; margin-right: 8px; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.news-banner .banner-right .source-list { color: rgba(255,255,255,0.45); font-size: 0.68rem; margin-top: 6px; }
+.news-carousel-wrap { padding: 12px 24px 16px; position: relative; }
+.news-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.news-header h3 { font-size: 0.85rem; font-weight: 700; color: #1a1a2e; }
+.news-header .update-time { font-size: 0.72rem; color: #999; }
 .news-carousel { position: relative; height: 180px; overflow: hidden; }
 .news-track { display: flex; transition: transform 0.6s ease; height: 100%; }
 .news-slide { min-width: 100%; padding: 4px 0; }
@@ -108,16 +120,26 @@ tr:hover { background: #f8f9ff; }
 
 <div class="container">
   <div class="news-section" id="newsSection">
-    <div class="news-header">
-      <h2><span class="icon">🔥</span>人形机器人热点信息</h2>
-      <span class="update-time" id="newsUpdateTime"></span>
+    <div class="news-banner">
+      <div class="banner-content">
+        <div class="banner-left">
+          <h2><span class="icon">🤖</span>人形机器人 · 全球热点</h2>
+          <div class="banner-subtitle">Humanoid Robot Global News Radar</div>
+        </div>
+        <div class="banner-right">
+          <div class="date-badge"><span class="dot"></span><span id="newsDate"></span></div>
+          <div class="source-list">来源：机器人大讲堂 · 机器之心 · 环球时报 · Reuters 等</div>
+        </div>
+      </div>
     </div>
-    <div class="news-carousel" id="newsCarousel">
-      <button class="news-nav prev" onclick="newsPrev()">‹</button>
-      <button class="news-nav next" onclick="newsNext()">›</button>
-      <div class="news-track" id="newsTrack"></div>
+    <div class="news-carousel-wrap">
+      <div class="news-carousel" id="newsCarousel">
+        <button class="news-nav prev" onclick="newsPrev()">‹</button>
+        <button class="news-nav next" onclick="newsNext()">›</button>
+        <div class="news-track" id="newsTrack"></div>
+      </div>
+      <div class="news-dots" id="newsDots"></div>
     </div>
-    <div class="news-dots" id="newsDots"></div>
   </div>
 
   <div class="toolbar">
@@ -378,6 +400,8 @@ function startAutoPlay() {
 
 fetch('data/news.json').then(r => r.json()).then(data => {
   newsData = data;
+  const now = new Date();
+  document.getElementById('newsDate').textContent = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
   document.getElementById('newsUpdateTime').textContent = `更新于 ${data[0]?.date || ''}`;
   renderNews();
 });
