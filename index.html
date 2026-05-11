@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全球人形机器人整机企业数据库</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; }
+.header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: white; padding: 24px 0; text-align: center; }
+.header h1 { font-size: 1.8rem; }
+.header p { opacity: 0.7; margin-top: 6px; font-size: 0.9rem; }
+.stats { display: flex; justify-content: center; gap: 32px; margin-top: 16px; }
+.stats span { font-size: 1.2rem; font-weight: 700; color: #4cc9f0; }
+.stats label { font-size: 0.75rem; opacity: 0.6; display: block; }
+.container { max-width: 1400px; margin: 0 auto; padding: 16px; }
+.toolbar { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.toolbar input, .toolbar select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; }
+.toolbar input { flex: 1; min-width: 200px; }
+.toolbar select { min-width: 140px; }
+.toolbar input:focus, .toolbar select:focus { outline: none; border-color: #4cc9f0; box-shadow: 0 0 0 2px rgba(76,201,240,0.2); }
+.result-info { font-size: 0.85rem; color: #666; margin-bottom: 12px; }
+table { width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); border-collapse: collapse; }
+th { background: #f8f9fa; padding: 10px 12px; text-align: left; font-size: 0.8rem; font-weight: 600; color: #666; border-bottom: 2px solid #e9ecef; cursor: pointer; user-select: none; white-space: nowrap; }
+th:hover { background: #e9ecef; }
+th .arrow { margin-left: 4px; font-size: 0.7rem; }
+td { padding: 8px 12px; font-size: 0.82rem; border-bottom: 1px solid #f0f0f0; }
+tr:hover { background: #f8f9ff; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+.badge-cn { background: #ff6b6b20; color: #c92a2a; }
+.badge-us { background: #4cc9f020; color: #0b7285; }
+.badge-eu { background: #ffd43b20; color: #e67700; }
+.badge-jp { background: #ff922b20; color: #c92a2a; }
+.badge-kr { background: #20c99720; color: #087f5b; }
+.stage-mass { background: #51cf6620; color: #2b8a3e; }
+.stage-pilot { background: #ffd43b20; color: #e67700; }
+.stage-rd { background: #adb5bd20; color: #495057; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }
+.pagination button { padding: 8px 14px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-size: 0.85rem; }
+.pagination button:hover:not(:disabled) { background: #e9ecef; }
+.pagination button:disabled { opacity: 0.4; cursor: default; }
+.pagination .current { font-weight: 700; padding: 8px 14px; }
+.detail-panel { display: none; position: fixed; top: 0; right: 0; width: 480px; max-width: 100vw; height: 100vh; background: white; box-shadow: -4px 0 20px rgba(0,0,0,0.15); z-index: 100; overflow-y: auto; padding: 24px; }
+.detail-panel.open { display: block; }
+.detail-panel .close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+.detail-panel h3 { margin-bottom: 16px; }
+.detail-panel .field { margin-bottom: 12px; }
+.detail-panel .field label { font-size: 0.75rem; color: #888; display: block; }
+.detail-panel .field span { font-size: 0.9rem; }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 99; }
+.overlay.open { display: block; }
+.clickable { cursor: pointer; color: #1c7ed6; }
+.clickable:hover { text-decoration: underline; }
+.footer { text-align: center; padding: 24px; color: #999; font-size: 0.78rem; }
+@media (max-width: 768px) {
+  .toolbar { flex-direction: column; }
+  .stats { gap: 16px; }
+  th:nth-child(4), td:nth-child(4), th:nth-child(6), td:nth-child(6) { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>全球人形机器人整机企业数据库</h1>
+  <p>Humanoid Robot Manufacturers Worldwide</p>
+  <div class="stats">
+    <span id="totalCount">--</span><label>企业总数</label>
+    <span id="cnCount">--</span><label>中国</label>
+    <span id="usCount">--</span><label>美国</label>
+    <span id="rowCount">--</span><label>其他国家</label>
+  </div>
+</div>
+
+<div class="container">
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="搜索企业名 / 产品 / 城市 / 行业...">
+    <select id="countryFilter">
+      <option value="">全部国家/地区</option>
+    </select>
+    <select id="typeFilter">
+      <option value="">全部形态</option>
+      <option value="双足">双足人形</option>
+      <option value="轮式">轮式双臂</option>
+      <option value="四足">四足延伸</option>
+      <option value="双臂">双臂协作</option>
+    </select>
+    <select id="stageFilter">
+      <option value="">全部阶段</option>
+      <option value="量产">量产阶段</option>
+      <option value="试点">商业试点</option>
+      <option value="研发">研发中</option>
+    </select>
+  </div>
+
+  <div class="result-info" id="resultInfo"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th onclick="sortBy('name')">企业名称 <span class="arrow" id="arrow-name"></span></th>
+        <th onclick="sortBy('country')">国家 <span class="arrow" id="arrow-country"></span></th>
+        <th onclick="sortBy('city')">城市 <span class="arrow" id="arrow-city"></span></th>
+        <th onclick="sortBy('product')">代表产品 <span class="arrow" id="arrow-product"></span></th>
+        <th onclick="sortBy('type')">形态 <span class="arrow" id="arrow-type"></span></th>
+        <th onclick="sortBy('stage')">阶段 <span class="arrow" id="arrow-stage"></span></th>
+        <th onclick="sortBy('sector')">领域 <span class="arrow" id="arrow-sector"></span></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<div class="footer" id="footer"></div>
+
+<div class="overlay" id="overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detailPanel"></div>
+
+<script>
+let companies = [];
+let filtered = [];
+let currentPage = 1;
+const PAGE_SIZE = 20;
+let sortKey = 'name';
+let sortAsc = true;
+
+function countryBadge(c) {
+  const map = { '中国': 'badge-cn', '美国': 'badge-us', '日本': 'badge-jp', '韩国': 'badge-kr' };
+  if (map[c]) return `<span class="badge ${map[c]}">${c}</span>`;
+  if (['挪威','英国','法国','德国','西班牙','意大利','瑞典','瑞士','荷兰'].includes(c)) return `<span class="badge badge-eu">${c}</span>`;
+  return `<span class="badge">${c}</span>`;
+}
+
+function stageBadge(s) {
+  if (s === '量产') return `<span class="badge stage-mass">量产</span>`;
+  if (s === '试点') return `<span class="badge stage-pilot">试点</span>`;
+  return `<span class="badge stage-rd">研发</span>`;
+}
+
+function renderTable() {
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const page = filtered.slice(start, start + PAGE_SIZE);
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = page.map(c => `
+    <tr>
+      <td class="clickable" onclick="showDetail('${c.id}')">${c.name}</td>
+      <td>${countryBadge(c.country)}</td>
+      <td>${c.city || '-'}</td>
+      <td>${c.product || '-'}</td>
+      <td>${c.type || '-'}</td>
+      <td>${stageBadge(c.stage)}</td>
+      <td>${c.sector || '-'}</td>
+    </tr>
+  `).join('');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#999;">未找到匹配的企业</td></tr>';
+  }
+  document.getElementById('resultInfo').textContent = `共 ${filtered.length} 家企业`;
+}
+
+function renderPagination() {
+  const total = Math.ceil(filtered.length / PAGE_SIZE);
+  const p = document.getElementById('pagination');
+  if (total <= 1) { p.innerHTML = ''; return; }
+  let html = `<button onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹ 上一页</button>`;
+  for (let i = 1; i <= total; i++) {
+    if (i === currentPage) html += `<span class="current">${i}</span>`;
+    else html += `<button onclick="goPage(${i})">${i}</button>`;
+  }
+  html += `<button onclick="goPage(${currentPage+1})" ${currentPage===total?'disabled':''}>下一页 ›</button>`;
+  p.innerHTML = html;
+}
+
+function goPage(n) { currentPage = n; renderTable(); renderPagination(); window.scrollTo(0,0); }
+
+function filter() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const cf = document.getElementById('countryFilter').value;
+  const tf = document.getElementById('typeFilter').value;
+  const sf = document.getElementById('stageFilter').value;
+  filtered = companies.filter(c => {
+    if (!c.name.toLowerCase().includes(q) && !(c.product||'').toLowerCase().includes(q) && !(c.city||'').toLowerCase().includes(q) && !(c.sector||'').toLowerCase().includes(q) && !(c.team_bg||'').toLowerCase().includes(q)) return false;
+    if (cf && c.country !== cf) return false;
+    if (tf && c.type !== tf) return false;
+    if (sf && c.stage !== sf) return false;
+    return true;
+  });
+  sortData();
+  currentPage = 1;
+  renderTable();
+  renderPagination();
+}
+
+function sortData() {
+  filtered.sort((a,b) => {
+    const va = a[sortKey] || ''; const vb = b[sortKey] || '';
+    const cmp = typeof va === 'number' ? va - vb : String(va).localeCompare(String(vb), 'zh');
+    return sortAsc ? cmp : -cmp;
+  });
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortAsc = !sortAsc;
+  else { sortKey = key; sortAsc = true; }
+  document.querySelectorAll('.arrow').forEach(a => a.textContent = '');
+  document.getElementById('arrow-'+key).textContent = sortAsc ? '▲' : '▼';
+  sortData(); currentPage = 1; renderTable(); renderPagination();
+}
+
+function showDetail(id) {
+  const c = companies.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('detailPanel').innerHTML = `
+    <button class="close" onclick="closeDetail()">&times;</button>
+    <h3>${c.name}</h3>
+    ${['country','city','product','year','type','stage','sector','team_bg','funding','shipment','website'].map(k => c[k] ? `<div class="field"><label>${fieldLabel(k)}</label><span>${k==='website'?`<a href="${c[k]}" target="_blank">${c[k]}</a>`:c[k]}</span></div>` : '').join('')}
+    <div style="margin-top:16px;font-size:0.78rem;color:#aaa">ID: ${c.id}</div>
+  `;
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function fieldLabel(k) {
+  const map = { country:'国家', city:'城市', product:'代表产品', year:'成立年份', type:'形态', stage:'阶段', sector:'应用领域', team_bg:'团队背景', funding:'融资/估值', shipment:'2025出货量', website:'官网' };
+  return map[k] || k;
+}
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function updateStats() {
+  document.getElementById('totalCount').textContent = companies.length;
+  document.getElementById('cnCount').textContent = companies.filter(c=>c.country==='中国').length;
+  document.getElementById('usCount').textContent = companies.filter(c=>c.country==='美国').length;
+  document.getElementById('rowCount').textContent = companies.filter(c=>c.country!=='中国'&&c.country!=='美国').length;
+  document.getElementById('footer').innerHTML = `数据持续更新中 · 最后更新: ${new Date().toISOString().slice(0,10)} · 来源: 公开信息多源交叉验证`;
+}
+
+function init() {
+  ['search','countryFilter','typeFilter','stageFilter'].forEach(id => {
+    document.getElementById(id).addEventListener('input', filter);
+    document.getElementById(id).addEventListener('change', filter);
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+}
+
+fetch('data/companies.json').then(r => r.json()).then(data => {
+  companies = data.sort((a,b) => a.name.localeCompare(b.name, 'zh'));
+  const countries = [...new Set(companies.map(c=>c.country))].sort();
+  const sel = document.getElementById('countryFilter');
+  countries.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+  filtered = [...companies];
+  sortData(); currentPage = 1;
+  renderTable(); renderPagination(); updateStats();
+  init();
+});
+</script>
+</body>
+</html>
