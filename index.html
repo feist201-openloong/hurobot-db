@@ -59,9 +59,34 @@ tr:hover { background: #f8f9ff; }
 .clickable { cursor: pointer; color: #1c7ed6; }
 .clickable:hover { text-decoration: underline; }
 .footer { text-align: center; padding: 24px; color: #999; font-size: 0.78rem; }
+.news-section { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.news-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.news-header h2 { font-size: 1.1rem; font-weight: 700; }
+.news-header h2 .icon { color: #ff6b6b; margin-right: 6px; }
+.news-header .update-time { font-size: 0.75rem; color: #999; }
+.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 10px; }
+.news-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; transition: box-shadow 0.15s; }
+.news-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.news-card .rank { display: inline-block; width: 22px; height: 22px; text-align: center; line-height: 22px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: white; margin-right: 8px; flex-shrink: 0; }
+.rank-1, .rank-2, .rank-3 { background: #ff6b6b; }
+.rank-4, .rank-5, .rank-6 { background: #ff922b; }
+.rank-7, .rank-8, .rank-9, .rank-10 { background: #4cc9f0; }
+.news-card .title-line { display: flex; align-items: flex-start; margin-bottom: 6px; }
+.news-card .title-line a { font-size: 0.88rem; font-weight: 600; color: #1a1a2e; text-decoration: none; line-height: 1.4; }
+.news-card .title-line a:hover { color: #1c7ed6; }
+.news-card .meta { font-size: 0.72rem; color: #999; margin-top: 4px; }
+.news-card .summary { font-size: 0.78rem; color: #555; line-height: 1.5; margin-top: 6px; }
+.heat-bar { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+.heat-bar .bar { flex: 1; height: 3px; background: #eee; border-radius: 2px; overflow: hidden; }
+.heat-bar .bar .fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #ff922b, #ff6b6b); }
+.heat-bar .val { font-size: 0.7rem; color: #ff6b6b; font-weight: 600; min-width: 32px; }
+.news-toggle { display: flex; gap: 8px; }
+.news-toggle button { padding: 4px 12px; border: 1px solid #ddd; border-radius: 14px; background: white; font-size: 0.78rem; cursor: pointer; transition: all 0.15s; }
+.news-toggle button.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
 @media (max-width: 768px) {
   .toolbar { flex-direction: column; }
   .stats { gap: 16px; }
+  .news-grid { grid-template-columns: 1fr; }
   th:nth-child(4), td:nth-child(4), th:nth-child(6), td:nth-child(6) { display: none; }
 }
 </style>
@@ -80,6 +105,20 @@ tr:hover { background: #f8f9ff; }
 </div>
 
 <div class="container">
+  <div class="news-section" id="newsSection">
+    <div class="news-header">
+      <h2><span class="icon">🔥</span>人形机器人热点信息</h2>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="update-time" id="newsUpdateTime"></span>
+        <div class="news-toggle">
+          <button class="active" onclick="switchNewsTab('hot',this)">热度排行</button>
+          <button onclick="switchNewsTab('latest',this)">最新资讯</button>
+        </div>
+      </div>
+    </div>
+    <div class="news-grid" id="newsGrid"></div>
+  </div>
+
   <div class="toolbar">
     <input type="text" id="search" placeholder="搜索企业名 / 产品 / 城市 / 行业...">
     <select id="countryFilter">
@@ -276,6 +315,40 @@ function init() {
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
 }
+
+let newsData = [];
+let newsMode = 'hot';
+
+function renderNews() {
+  const grid = document.getElementById('newsGrid');
+  let items = newsMode === 'hot' ? [...newsData].sort((a,b) => b.heat - a.heat).slice(0,10) : [...newsData].sort((a,b) => b.date.localeCompare(a.date)).slice(0,10);
+  grid.innerHTML = items.map((n,i) => {
+    const cls = newsMode==='hot' ? `rank-${i+1}` : '';
+    return `
+    <div class="news-card">
+      <div class="title-line">
+        <span class="rank ${cls}">${newsMode==='hot'?i+1:'•'}</span>
+        <a href="${n.url}" target="_blank">${n.title}</a>
+      </div>
+      <div class="summary">${n.summary}</div>
+      <div class="meta">${n.date} · 来源: ${n.source}</div>
+      ${newsMode==='hot'?`<div class="heat-bar"><div class="bar"><div class="fill" style="width:${n.heat}%"></div></div><span class="val">${n.heat}°</span></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function switchNewsTab(mode, btn) {
+  newsMode = mode;
+  document.querySelectorAll('.news-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNews();
+}
+
+fetch('data/news.json').then(r => r.json()).then(data => {
+  newsData = data;
+  document.getElementById('newsUpdateTime').textContent = `更新于 ${data[0]?.date || ''}`;
+  renderNews();
+});
 
 fetch('data/companies.json').then(r => r.json()).then(data => {
   companies = data.sort((a,b) => a.name.localeCompare(b.name, 'zh'));
