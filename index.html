@@ -59,34 +59,36 @@ tr:hover { background: #f8f9ff; }
 .clickable { cursor: pointer; color: #1c7ed6; }
 .clickable:hover { text-decoration: underline; }
 .footer { text-align: center; padding: 24px; color: #999; font-size: 0.78rem; }
-.news-section { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-.news-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.news-section { background: white; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+.news-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .news-header h2 { font-size: 1.1rem; font-weight: 700; }
 .news-header h2 .icon { color: #ff6b6b; margin-right: 6px; }
 .news-header .update-time { font-size: 0.75rem; color: #999; }
-.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 10px; }
-.news-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; transition: box-shadow 0.15s; }
-.news-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-.news-card .rank { display: inline-block; width: 22px; height: 22px; text-align: center; line-height: 22px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: white; margin-right: 8px; flex-shrink: 0; }
+.news-carousel { position: relative; height: 180px; overflow: hidden; }
+.news-track { display: flex; transition: transform 0.6s ease; height: 100%; }
+.news-slide { min-width: 100%; padding: 4px 0; }
+.news-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.15s; }
+.news-item:hover { background: #f8f9ff; }
+.news-item:last-child { border-bottom: none; }
+.news-item .rank { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: white; flex-shrink: 0; }
 .rank-1, .rank-2, .rank-3 { background: #ff6b6b; }
-.rank-4, .rank-5, .rank-6 { background: #ff922b; }
-.rank-7, .rank-8, .rank-9, .rank-10 { background: #4cc9f0; }
-.news-card .title-line { display: flex; align-items: flex-start; margin-bottom: 6px; }
-.news-card .title-line a { font-size: 0.88rem; font-weight: 600; color: #1a1a2e; text-decoration: none; line-height: 1.4; }
-.news-card .title-line a:hover { color: #1c7ed6; }
-.news-card .meta { font-size: 0.72rem; color: #999; margin-top: 4px; }
-.news-card .summary { font-size: 0.78rem; color: #555; line-height: 1.5; margin-top: 6px; }
-.heat-bar { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
-.heat-bar .bar { flex: 1; height: 3px; background: #eee; border-radius: 2px; overflow: hidden; }
-.heat-bar .bar .fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, #ff922b, #ff6b6b); }
-.heat-bar .val { font-size: 0.7rem; color: #ff6b6b; font-weight: 600; min-width: 32px; }
-.news-toggle { display: flex; gap: 8px; }
-.news-toggle button { padding: 4px 12px; border: 1px solid #ddd; border-radius: 14px; background: white; font-size: 0.78rem; cursor: pointer; transition: all 0.15s; }
-.news-toggle button.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+.rank-4, .rank-5 { background: #ff922b; }
+.news-item .content { flex: 1; min-width: 0; }
+.news-item .content .t { font-size: 0.85rem; font-weight: 600; color: #1a1a2e; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.news-item:hover .content .t { color: #1c7ed6; text-decoration: underline; }
+.news-item .content .info { font-size: 0.7rem; color: #999; margin-top: 2px; }
+.news-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.news-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; cursor: pointer; transition: all 0.2s; }
+.news-dots .dot.active { background: #ff6b6b; width: 20px; border-radius: 4px; }
+.news-nav { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; z-index: 2; opacity: 0; transition: opacity 0.2s; }
+.news-section:hover .news-nav { opacity: 1; }
+.news-nav.prev { left: 4px; }
+.news-nav.next { right: 4px; }
+.news-nav:hover { background: rgba(0,0,0,0.7); }
 @media (max-width: 768px) {
   .toolbar { flex-direction: column; }
   .stats { gap: 16px; }
-  .news-grid { grid-template-columns: 1fr; }
+  .news-carousel { height: 200px; }
   th:nth-child(4), td:nth-child(4), th:nth-child(6), td:nth-child(6) { display: none; }
 }
 </style>
@@ -108,15 +110,14 @@ tr:hover { background: #f8f9ff; }
   <div class="news-section" id="newsSection">
     <div class="news-header">
       <h2><span class="icon">🔥</span>人形机器人热点信息</h2>
-      <div style="display:flex;align-items:center;gap:12px">
-        <span class="update-time" id="newsUpdateTime"></span>
-        <div class="news-toggle">
-          <button class="active" onclick="switchNewsTab('hot',this)">热度排行</button>
-          <button onclick="switchNewsTab('latest',this)">最新资讯</button>
-        </div>
-      </div>
+      <span class="update-time" id="newsUpdateTime"></span>
     </div>
-    <div class="news-grid" id="newsGrid"></div>
+    <div class="news-carousel" id="newsCarousel">
+      <button class="news-nav prev" onclick="newsPrev()">‹</button>
+      <button class="news-nav next" onclick="newsNext()">›</button>
+      <div class="news-track" id="newsTrack"></div>
+    </div>
+    <div class="news-dots" id="newsDots"></div>
   </div>
 
   <div class="toolbar">
@@ -317,31 +318,62 @@ function init() {
 }
 
 let newsData = [];
-let newsMode = 'hot';
+let newsPage = 0;
+let newsAutoTimer = null;
+const NEWS_PER_PAGE = 5;
 
 function renderNews() {
-  const grid = document.getElementById('newsGrid');
-  let items = newsMode === 'hot' ? [...newsData].sort((a,b) => b.heat - a.heat).slice(0,10) : [...newsData].sort((a,b) => b.date.localeCompare(a.date)).slice(0,10);
-  grid.innerHTML = items.map((n,i) => {
-    const cls = newsMode==='hot' ? `rank-${i+1}` : '';
-    return `
-    <div class="news-card">
-      <div class="title-line">
-        <span class="rank ${cls}">${newsMode==='hot'?i+1:'•'}</span>
-        <a href="${n.url}" target="_blank">${n.title}</a>
-      </div>
-      <div class="summary">${n.summary}</div>
-      <div class="meta">${n.date} · 来源: ${n.source}</div>
-      ${newsMode==='hot'?`<div class="heat-bar"><div class="bar"><div class="fill" style="width:${n.heat}%"></div></div><span class="val">${n.heat}°</span></div>`:''}
-    </div>`;
-  }).join('');
+  const track = document.getElementById('newsTrack');
+  const dots = document.getElementById('newsDots');
+  const items = [...newsData].sort((a,b) => b.heat - a.heat);
+  const pages = Math.ceil(items.length / NEWS_PER_PAGE);
+  let slides = [];
+  for (let p = 0; p < pages; p++) {
+    const chunk = items.slice(p * NEWS_PER_PAGE, p * NEWS_PER_PAGE + NEWS_PER_PAGE);
+    slides.push(chunk.map((n,i) => {
+      const rank = p * NEWS_PER_PAGE + i + 1;
+      const rcls = rank <= 3 ? `rank-${rank}` : (rank <= 5 ? `rank-${rank}` : '');
+      return `
+      <div class="news-item" onclick="window.open('${n.url}','_blank')">
+        <span class="rank ${rcls}" style="${rank>5?'background:#4cc9f0':''}">${rank}</span>
+        <div class="content">
+          <div class="t">${n.title}</div>
+          <div class="info">${n.date} · ${n.source} · 热度 ${n.heat}°</div>
+        </div>
+      </div>`;
+    }));
+  }
+  track.innerHTML = slides.map(s => `<div class="news-slide">${s.join('')}</div>`).join('');
+  dots.innerHTML = Array.from({length: pages}, (_,i) => `<span class="dot${i===0?' active':''}" onclick="newsGo(${i})"></span>`).join('');
+  newsPage = 0;
+  updateSlide();
+  startAutoPlay();
 }
 
-function switchNewsTab(mode, btn) {
-  newsMode = mode;
-  document.querySelectorAll('.news-toggle button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderNews();
+function updateSlide() {
+  document.getElementById('newsTrack').style.transform = `translateX(-${newsPage * 100}%)`;
+  document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i === newsPage));
+}
+
+function newsGo(p) {
+  newsPage = p;
+  updateSlide();
+  startAutoPlay();
+}
+function newsPrev() { newsPage = Math.max(0, newsPage - 1); updateSlide(); startAutoPlay(); }
+function newsNext() {
+  const pages = Math.ceil(newsData.length / NEWS_PER_PAGE);
+  newsPage = (newsPage + 1) % pages;
+  updateSlide();
+  startAutoPlay();
+}
+function startAutoPlay() {
+  clearInterval(newsAutoTimer);
+  newsAutoTimer = setInterval(() => {
+    const pages = Math.ceil(newsData.length / NEWS_PER_PAGE);
+    newsPage = (newsPage + 1) % pages;
+    updateSlide();
+  }, 5000);
 }
 
 fetch('data/news.json').then(r => r.json()).then(data => {
